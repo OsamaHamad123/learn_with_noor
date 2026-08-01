@@ -22,7 +22,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; font-family: 'Cairo', sans-serif; }
-        body { background: linear-gradient(135deg, #E0E7FF 0%, #DBEAFE 100%); color: var(--text-color); height: 100vh; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
+        body { background: linear-gradient(135deg, #E0E7FF 0%, #DBEAFE 100%); color: var(--text-color); height: 100vh; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; position: fixed; width: 100vw; margin:0; padding:0; }
 
         .blob { position: absolute; filter: blur(60px); z-index: -1; opacity: 0.6; border-radius: 50%; animation: moveBlob 15s infinite alternate; }
         .blob-1 { width: 300px; height: 300px; background: #60A5FA; top: -100px; right: -50px; }
@@ -671,28 +671,72 @@
         if(currentSortable) { currentSortable.destroy(); currentSortable = null; }
 
         if (currentQuestion.type === 'sort') {
-            // Sort Question
+            // New Click-to-Sort UI
             let shuffled = currentQuestion.opts.map((text, i) => ({ text, id: i }));
             shuffled.sort(() => Math.random() - 0.5);
             
-            shuffled.forEach((optObj) => {
+            // Create Answer Box
+            const answerBox = document.createElement('div');
+            answerBox.id = 'sort-answer-box';
+            answerBox.style.cssText = 'min-height: 80px; border: 2px dashed var(--primary); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.5); margin-bottom: 20px; transition: all 0.3s;';
+            
+            // Create Available Options Box
+            const availableBox = document.createElement('div');
+            availableBox.id = 'sort-available-box';
+            availableBox.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+
+            container.appendChild(answerBox);
+            container.appendChild(availableBox);
+
+            function updateBoxes() {
+                if(answerBox.children.length === 0 || (answerBox.children.length === 1 && answerBox.children[0].tagName === 'SPAN')) {
+                    answerBox.innerHTML = '<span style="color:#94A3B8; text-align:center; font-weight:bold; font-size:1.1rem; padding: 20px 0;">اضغط على الكلمات بالأسفل لترتيبها هنا 👆</span>';
+                } else {
+                    const placeholder = answerBox.querySelector('span:not(.drag-handle)');
+                    if(placeholder && placeholder.textContent.includes('اضغط')) placeholder.remove();
+                }
+            }
+
+            function createClickableItem(optObj, parentBox) {
                 const el = document.createElement('div');
                 el.className = 'sortable-item bounce-in';
                 el.dataset.id = optObj.id;
-                el.innerHTML = `<span>${optObj.text}</span><span class="drag-handle">☰</span>`;
-                container.appendChild(el);
+                el.style.cursor = 'pointer';
+                el.style.justifyContent = 'center';
+                el.innerHTML = `<span style="pointer-events:none;">${optObj.text}</span>`;
+                
+                el.onclick = () => {
+                    const sourceBox = el.parentElement;
+                    const targetBox = sourceBox.id === 'sort-available-box' ? answerBox : availableBox;
+                    sourceBox.removeChild(el);
+                    targetBox.appendChild(el);
+                    updateBoxes();
+                };
+                parentBox.appendChild(el);
+            }
+
+            shuffled.forEach((optObj) => {
+                createClickableItem(optObj, availableBox);
             });
             
-            currentSortable = new Sortable(container, {
-                animation: 150,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost'
-            });
-            
+            updateBoxes();
+
             actionContainer.style.display = 'flex';
             document.getElementById('submit-action-btn').disabled = false;
             document.getElementById('submit-action-btn').onclick = () => {
-                const currentOrder = Array.from(container.children).map(c => parseInt(c.dataset.id));
+                // Ensure all items are in answer box
+                const currentOrderElements = Array.from(answerBox.children).filter(c => c.tagName === 'DIV');
+                if (currentOrderElements.length !== currentQuestion.opts.length) {
+                    answerBox.style.borderColor = '#EF4444';
+                    answerBox.style.backgroundColor = '#FEF2F2';
+                    setTimeout(() => {
+                        answerBox.style.borderColor = 'var(--primary)';
+                        answerBox.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                    }, 800);
+                    speakText("أكمل ترتيب كل الكلمات أولاً");
+                    return;
+                }
+                const currentOrder = currentOrderElements.map(c => parseInt(c.dataset.id));
                 const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(currentQuestion.correctOrder);
                 handleAnswer(isCorrect, document.getElementById('submit-action-btn'));
             };
