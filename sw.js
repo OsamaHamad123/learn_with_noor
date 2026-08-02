@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noor-game-cache-v5';
+const CACHE_NAME = 'noor-game-cache-v6';
 const urlsToCache = [
   './index.html',
   './manifest.json',
@@ -13,6 +13,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Force the waiting service worker to become the active service worker.
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -59,6 +60,7 @@ self.addEventListener('fetch', event => {
 
 // Activate event for cleanup
 self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim()); // Become available to all pages
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
