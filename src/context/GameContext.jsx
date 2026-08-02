@@ -14,8 +14,9 @@ export function GameProvider({ children }) {
   const [lootOpened, setLootOpened] = useState(false);
   const [activeScreen, setActiveScreen] = useState('story');
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentWorldId, setCurrentWorldId] = useState('seerah');
-  const [activeModal, setActiveModal] = useState(null); // 'store', 'quests', 'secret', 'cert', etc.
+  const [activeModal, setActiveModal] = useState(null);
 
   // Load State
   useEffect(() => {
@@ -37,7 +38,6 @@ export function GameProvider({ children }) {
     }
   }, []);
 
-  // Save State
   const saveState = (overrides = {}) => {
     try {
       const stateToSave = {
@@ -75,7 +75,12 @@ export function GameProvider({ children }) {
   };
 
   const speak = (txt) => {
-    speakText(txt, audioEnabled);
+    speakText(
+      txt,
+      audioEnabled,
+      () => setIsSpeaking(true),
+      () => setIsSpeaking(false)
+    );
   };
 
   return (
@@ -86,6 +91,7 @@ export function GameProvider({ children }) {
       questProgress, lootOpened, setLootOpened,
       activeScreen, setActiveScreen,
       audioEnabled, setAudioEnabled,
+      isSpeaking, setIsSpeaking,
       currentWorldId, setCurrentWorldId,
       activeModal, setActiveModal,
       addXpAndCoins, getRank, speak, saveState

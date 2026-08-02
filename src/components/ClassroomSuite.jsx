@@ -3,15 +3,56 @@ import { useGame } from '../context/GameContext';
 import NoorAvatar from './NoorAvatar';
 import { playAudioTone } from '../services/speechService';
 
+const STORIES = [
+  {
+    id: 1,
+    title: "🌸 قصة الأمانة والدرهم المفقود",
+    value: "الأمانة وإعادة الحقوق",
+    text: "كان يوسف يلعب في الحديقة، فوجد صرة صغيرة فيها دراهم وسواراً براقاً. تذكر نصيحة صديقته نور: 'الأمانة هي قوة المسلم وسر محبة الله له'. أسرع يوسف وسلمها لحارس الحديقة، وبعد قليل جاءت عجوز تبحث عنها وتدعو ليوسف بالبركة والتوفيق!"
+  },
+  {
+    id: 2,
+    title: "❤️ قصة العصفور الجائع والسندويش المقسوم",
+    value: "الرحمة والإيثار",
+    text: "في يوم شتاء بارد، كانت سارة تأكل سندويشها الدافئ، فرأت عصفوراً صغيراً يرتجف من البرد. تذكرت كلام نور عن الرحمة، ففتت جزءاً من طعامها وقدمته للعصفور، فصار العصفور يرفرف حولها بسعادة وشكر!"
+  },
+  {
+    id: 3,
+    title: "🤲 قصة بركة بسم الله",
+    value: "التسمية وشكر النعم",
+    text: "كان عمر يستعجل دائماً في الأكل وينسى أن يذكر اسم الله. جلست معه نور وقالت له: 'التسمية تجعل الطعام مباركاً ويحميك من الشياطين'. من يومها، أصبح عمر يبتسم ويقول بسم الله قبل كل لقيمة، وصار يشعر بالنشاط والصحة!"
+  },
+  {
+    id: 4,
+    title: "🧹 قصة بطل النظافة ونبض الشارع",
+    value: "إماطة الأذى ونظافة البيئة",
+    text: "شاهد خالد قشرة موز ملقاة على الرصيف، وكان يمر بها الناس دون اهتمام. تذكر قول النبي ونور: 'إماطة الأذى عن الطريق صدقة'. انحنى خالد وشال القشرة ووضعها في سلة المهملات، فمنع بسلوكه البسيط سقوط طفل صغير!"
+  },
+  {
+    id: 5,
+    title: "🤝 قصة اعتذار الشجعان",
+    value: "الشجاعة والاعتذار",
+    text: "كسر بدر لعبة صديقه أحمد بالخطأ أثناء اللعب. خاف بدر في البداية، لكن نور قالت له: 'الاعتذار الصادق من صفات الأبطال الأقوياء'. ذهب بدر لأحمد وقال له بشجاعة: 'أنا آسف يا صديقي وسأساعدك في إصلاحها'. فابتسم أحمد وعانقه!"
+  },
+  {
+    id: 6,
+    title: "👴 قصة مساعدة الجد اللطيف",
+    value: "احترام الكبار ومساعدتهم",
+    text: "رأت مريم جارهما المسن يحمل أكياساً ثقيلة ويصعد السلم بصعوبة. أسرعت مريم وقالت: 'دعني أساعدك يا جدي!'. فرح الجد ودعا لها بالخير. تذكرت مريم كلام نور: 'احترام الكبير يملأ حياتنا بالبركة والتوفيق'!"
+  }
+];
+
 export default function ClassroomSuite() {
   const { speak, setActiveScreen, setActiveModal, addXpAndCoins } = useGame();
   const [activeTrack, setActiveTrack] = useState(1);
+  const [currentStoryIdx, setCurrentStoryIdx] = useState(0);
 
-  // Ask Noor AI Chat State
   const [chatMessages, setChatMessages] = useState([
     { sender: 'noor', text: 'مرحباً بكم يا أبطال الخيمة الصفية! أنا جاهزة للإجابة عن أسئلة مجموعاتكم بذكاء! 💡' }
   ]);
   const [chatInput, setChatInput] = useState('');
+
+  const currentStory = STORIES[currentStoryIdx];
 
   const tracks = [
     { id: 1, title: '📖 تعلم (5د)', icon: '📖' },
@@ -47,9 +88,31 @@ export default function ClassroomSuite() {
     }, 600);
   };
 
+  const gamesList = [
+    { id: 'game_racing', icon: '🏎️', title: 'سباق السيارات', desc: 'سرعة القيادة المعرفية' },
+    { id: 'game_whack', icon: '🔨', title: 'ضرب السلوكيات', desc: 'القضاء على الأخطاء' },
+    { id: 'game_shield', icon: '🛡️', title: 'درع نور وحصن القيم', desc: 'الدفاع عن الأخلاق' },
+    { id: 'game_brick', icon: '🧱', title: 'كاسر المكعبات', desc: 'تكسير مكعبات المعرفة' },
+    { id: 'game_wordsearch', icon: '🔤', title: 'شبكة الكلمات', desc: 'الحروف والكلمات المخفية' },
+    { id: 'game_mizan', icon: '⚖️', title: 'ميزان الأعمال', desc: 'ثقل كفة الحسنات' },
+    { id: 'game_science', icon: '🧪', title: 'مختبر العلوم', desc: 'تجارب التلوين والمزج' },
+    { id: 'game_piano', icon: '🎵', title: 'بيانو الأناشيد', desc: 'عزف ألحان الأمل' },
+    { id: 'game_space', icon: '🚀', title: 'صاروخ الفضاء', desc: 'مغامرة الفضاء' },
+    { id: 'game_tower', icon: '🏰', title: 'برج المعرفة', desc: 'بناء البرج السحري' },
+    { id: 'game_chef', icon: '🍳', title: 'مطبخ نور', desc: 'المقادير الصحية' },
+    { id: 'game_catch', icon: '🎯', title: 'صيد الخيرات', desc: 'سلة نور السحرية' },
+    { id: 'game_memory', icon: '🎴', title: 'طابق البطاقات', desc: 'الذاكرة والصور' },
+    { id: 'game_dragdrop', icon: '🧩', title: 'تصنيف السلوكيات', desc: 'الصادق والخاطئ' },
+    { id: 'game_balloon', icon: '🎈', title: 'فرقعة البالونات', desc: 'السرعة والتركيز' },
+    { id: 'game_wordpuzzle', icon: '🔤', title: 'تركيب العبارات', desc: 'ترتيب الكلمات' },
+    { id: 'game_hidden', icon: '🔍', title: 'العدسة السحرية', desc: 'البحث عن الأشياء' },
+    { id: 'game_sound', icon: '🔊', title: 'تمييز الأصوات', desc: 'الاستماع والمطابقة' },
+    { id: 'game_drawing', icon: '🎨', title: 'لوحة الرسم', desc: 'رسم وتلوين وملصقات' },
+    { id: 'game_wheel', icon: '🎡', title: 'عجلة الحظ', desc: 'التحدي والتنافس' }
+  ];
+
   return (
     <div className="glass-card bounce-in" style={{ width: '95%', maxWidth: '750px', margin: 'auto' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <button className="btn" style={{ background: '#CBD5E1', color: '#1E293B', padding: '6px 14px', margin: 0 }} onClick={() => setActiveScreen('universe')}>
           🔙 المجرة
@@ -58,7 +121,6 @@ export default function ClassroomSuite() {
         <div style={{ width: '60px' }}></div>
       </div>
 
-      {/* Track Tabs Bar */}
       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '15px', scrollbarWidth: 'none' }}>
         {tracks.map(t => (
           <button
@@ -80,7 +142,6 @@ export default function ClassroomSuite() {
         ))}
       </div>
 
-      {/* Track 1: Learn */}
       {activeTrack === 1 && (
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <NoorAvatar expression="happy" size={140} />
@@ -93,41 +154,21 @@ export default function ClassroomSuite() {
         </div>
       )}
 
-      {/* Track 2: Play Mini-Games Hub */}
       {activeTrack === 2 && (
         <div style={{ textAlign: 'center' }}>
-          <h3 style={{ color: 'var(--primary)', marginBottom: '15px' }}>🎮 مركز الألعاب التفاعلية الخمس</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-            <div className="glass-card" style={{ cursor: 'pointer', background: '#FFF' }} onClick={() => setActiveScreen('game_memory')}>
-              <div style={{ fontSize: '2.5rem' }}>🎴</div>
-              <h4 style={{ color: 'var(--primary)', margin: '8px 0' }}>لعبة الذاكرة</h4>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>طابق الصور والبطاقات الإسلامية</p>
-            </div>
-            <div className="glass-card" style={{ cursor: 'pointer', background: '#FFF' }} onClick={() => setActiveScreen('game_dragdrop')}>
-              <div style={{ fontSize: '2.5rem' }}>🧩</div>
-              <h4 style={{ color: 'var(--primary)', margin: '8px 0' }}>تصنيف السلوكيات</h4>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>سحب وإفلات السلوكيات</p>
-            </div>
-            <div className="glass-card" style={{ cursor: 'pointer', background: '#FFF' }} onClick={() => setActiveScreen('game_balloon')}>
-              <div style={{ fontSize: '2.5rem' }}>🎈</div>
-              <h4 style={{ color: 'var(--primary)', margin: '8px 0' }}>فرقعة البالونات</h4>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>فرقعة البالونات السريعة</p>
-            </div>
-            <div className="glass-card" style={{ cursor: 'pointer', background: '#FFF' }} onClick={() => setActiveScreen('game_drawing')}>
-              <div style={{ fontSize: '2.5rem' }}>🎨</div>
-              <h4 style={{ color: 'var(--primary)', margin: '8px 0' }}>لوحة الرسم</h4>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>رسم وتلوين وملصقات</p>
-            </div>
-            <div className="glass-card" style={{ cursor: 'pointer', background: '#FFF' }} onClick={() => setActiveScreen('game_wheel')}>
-              <div style={{ fontSize: '2.5rem' }}>🎡</div>
-              <h4 style={{ color: 'var(--primary)', margin: '8px 0' }}>عجلة الحظ</h4>
-              <p style={{ fontSize: '0.8rem', color: '#64748B' }}>تدوير عجلة التحديات</p>
-            </div>
+          <h3 style={{ color: 'var(--primary)', marginBottom: '15px' }}>🎮 مركز الألعاب التفاعلية الـ 20</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+            {gamesList.map(g => (
+              <div key={g.id} className="glass-card" style={{ cursor: 'pointer', background: '#FFF', padding: '10px' }} onClick={() => setActiveScreen(g.id)}>
+                <div style={{ fontSize: '2rem' }}>{g.icon}</div>
+                <h4 style={{ color: 'var(--primary)', margin: '4px 0', fontSize: '0.85rem' }}>{g.title}</h4>
+                <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0 }}>{g.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Track 3: Discover Spot the Error */}
       {activeTrack === 3 && (
         <div style={{ textAlign: 'center' }}>
           <NoorAvatar expression="thinking" size={110} />
@@ -136,31 +177,16 @@ export default function ClassroomSuite() {
             تعرض نور الموقف التالي: <strong>"يقوم أحمد بالأكل باليد اليسرى ودون أن يذكر اسم الله"</strong>
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '450px', margin: 'auto' }}>
-            <button
-              className="btn"
-              style={{ background: '#EF4444', color: 'white' }}
-              onClick={() => {
-                addXpAndCoins(15, 10);
-                speak("أحسنت واكتشفت الخطأ بنجاح! الأكل باليد اليسرى خطأ ويجب الأكل باليمين!");
-              }}
-            >
+            <button className="btn" style={{ background: '#EF4444', color: 'white' }} onClick={() => { addXpAndCoins(15, 10); speak("أحسنت واكتشفت الخطأ بنجاح! الأكل باليد اليسرى خطأ ويجب الأكل باليمين!"); }}>
               ❌ الخطأ: الأكل باليد اليسرى (يجب باليمين)
             </button>
-            <button
-              className="btn"
-              style={{ background: '#EF4444', color: 'white' }}
-              onClick={() => {
-                addXpAndCoins(15, 10);
-                speak("ممتاز! عدم التسمية خطأ ويجب القول: بسم الله!");
-              }}
-            >
+            <button className="btn" style={{ background: '#EF4444', color: 'white' }} onClick={() => { addXpAndCoins(15, 10); speak("ممتاز! عدم التسمية خطأ ويجب القول: بسم الله!"); }}>
               ❌ الخطأ: عدم التسمية قبل الأكل (يجب القول: بسم الله)
             </button>
           </div>
         </div>
       )}
 
-      {/* Track 4: Ask AI Chatbot */}
       {activeTrack === 4 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -170,57 +196,43 @@ export default function ClassroomSuite() {
               <small style={{ color: '#64748B' }}>اطرح سؤال مجموعتك ونور ستجيب فوراً!</small>
             </div>
           </div>
-
           <div style={{ height: '180px', overflowY: 'auto', background: '#F8FAFC', borderRadius: '16px', padding: '12px', marginBottom: '12px', border: '1px solid #E2E8F0' }}>
             {chatMessages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  background: msg.sender === 'user' ? '#E2E8F0' : '#DBEAFE',
-                  color: msg.sender === 'user' ? '#1E293B' : 'var(--primary)',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  marginBottom: '8px',
-                  maxWidth: '85%',
-                  marginLeft: msg.sender === 'user' ? 'auto' : '0',
-                  fontWeight: 'bold'
-                }}
-              >
+              <div key={i} style={{ background: msg.sender === 'user' ? '#E2E8F0' : '#DBEAFE', color: msg.sender === 'user' ? '#1E293B' : 'var(--primary)', padding: '8px 14px', borderRadius: '12px', marginBottom: '8px', maxWidth: '85%', marginLeft: msg.sender === 'user' ? 'auto' : '0', fontWeight: 'bold' }}>
                 {msg.text}
               </div>
             ))}
           </div>
-
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="اكتب سؤال مجموعتك هنا..."
-              style={{ flex: 1, padding: '10px 14px', borderRadius: '15px', border: '2px solid var(--primary)', fontSize: '0.95rem' }}
-            />
-            <button className="btn" style={{ background: 'var(--primary)', color: 'white', padding: '10px 20px', margin: 0 }} onClick={() => handleSendChat()}>
-              إرسال 🚀
+            <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="اكتب سؤال مجموعتك هنا..." style={{ flex: 1, padding: '10px 14px', borderRadius: '15px', border: '2px solid var(--primary)', fontSize: '0.95rem' }} />
+            <button className="btn" style={{ background: 'var(--primary)', color: 'white', padding: '10px 20px', margin: 0 }} onClick={() => handleSendChat()}>إرسال 🚀</button>
+          </div>
+        </div>
+      )}
+
+      {activeTrack === 5 && (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+            <NoorAvatar expression="reading" size={130} />
+          </div>
+          <span style={{ background: '#FEF3C7', color: '#D97706', padding: '4px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+            ✨ القيمة: {currentStory.value}
+          </span>
+          <h3 style={{ color: 'var(--primary)', margin: '8px 0 12px 0', fontSize: '1.3rem' }}>{currentStory.title}</h3>
+          <p style={{ fontSize: '1.05rem', color: '#334155', lineHeight: 1.7, background: '#FFF', padding: '16px', borderRadius: '20px', border: '2px solid #DBEAFE', boxShadow: '0 4px 15px rgba(0,0,0,0.04)', marginBottom: '15px' }}>
+            "{currentStory.text}"
+          </p>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn pulse" style={{ background: '#8B5CF6', color: 'white', padding: '10px 24px' }} onClick={() => speak(currentStory.text)}>
+              استمع للقصة بصوت نور 🔊
+            </button>
+            <button className="btn" style={{ background: '#3B82F6', color: 'white', padding: '10px 20px' }} onClick={() => { setCurrentStoryIdx((prev) => (prev + 1) % STORIES.length); playAudioTone('success'); }}>
+              القصة التالية ➡️ ({currentStoryIdx + 1}/{STORIES.length})
             </button>
           </div>
         </div>
       )}
 
-      {/* Track 5: Storyteller */}
-      {activeTrack === 5 && (
-        <div style={{ textAlign: 'center' }}>
-          <NoorAvatar expression="happy" size={120} />
-          <h3 style={{ color: 'var(--primary)', margin: '10px 0' }}>📚 احكِ مع نور</h3>
-          <p style={{ fontSize: '1.1rem', color: '#334155', lineHeight: 1.6, background: '#FFF', padding: '15px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-            "في يوم من الأيام، كان عليّ يجلس مع عائلته على الوجبة، وتذكر نصيحة نور بأن يقول 'بسم الله' ويأكل بيمينه، فابتسم والداه وفرحا ببطولته!"
-          </p>
-          <button className="btn" style={{ background: '#8B5CF6', color: 'white', marginTop: '15px' }} onClick={() => speak("في يوم من الأيام، كان عليّ يجلس مع عائلته على الوجبة، وتذكر نصيحة نور بأن يقول بسم الله ويأكل بيمينه!")}>
-            استمع للقصة 🔊
-          </button>
-        </div>
-      )}
-
-      {/* Track 6: Draw Shortcut */}
       {activeTrack === 6 && (
         <div style={{ textAlign: 'center' }}>
           <h3 style={{ color: 'var(--primary)', marginBottom: '15px' }}>🎨 ارسم ولون مع نور</h3>
@@ -231,7 +243,6 @@ export default function ClassroomSuite() {
         </div>
       )}
 
-      {/* Track 7: Challenge & Cert */}
       {activeTrack === 7 && (
         <div style={{ textAlign: 'center' }}>
           <NoorAvatar expression="happy" size={130} />

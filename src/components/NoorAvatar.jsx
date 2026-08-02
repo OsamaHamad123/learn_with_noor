@@ -1,28 +1,57 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useGame } from '../context/GameContext';
+import { playAudioTone } from '../services/speechService';
 
-export default function NoorAvatar({ avatar = 'noor3d', expression = 'happy', size = 160, className = '' }) {
-  const svgRef = useRef(null);
+// Import Noor Official Character Images
+import noorHappyImg from '../assets/Gemini_Generated_Image_bjlj13bjlj13bjlj-removebg-preview.png';
+import noorThinkingImg from '../assets/Gemini_Generated_Image_hds9enhds9enhds9-removebg-preview.png';
+import noorWavingImg from '../assets/Gemini_Generated_Image_kcy1t7kcy1t7kcy1-removebg-preview.png';
+import noorReadingImg from '../assets/Gemini_Generated_Image_mrkmoomrkmoomrkm-removebg-preview.png';
+import noorCelebratingImg from '../assets/Gemini_Generated_Image_of61shof61shof61-removebg-preview.png';
+import noorPointingImg from '../assets/Gemini_Generated_Image_ursfhbursfhbursf-removebg-preview.png';
 
+export default function NoorAvatar({ expression = 'happy', size = 160, className = '', onClick = null }) {
+  const { isSpeaking, speak } = useGame();
+  const avatarRef = useRef(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [sparkles, setSparkles] = useState([]);
+
+  // Map expression to character image
+  const getNoorImage = () => {
+    switch (expression) {
+      case 'thinking':
+        return noorThinkingImg;
+      case 'waving':
+      case 'welcome':
+        return noorWavingImg;
+      case 'reading':
+        return noorReadingImg;
+      case 'celebrating':
+      case 'win':
+        return noorCelebratingImg;
+      case 'pointing':
+        return noorPointingImg;
+      case 'happy':
+      case 'idle':
+      default:
+        return noorHappyImg;
+    }
+  };
+
+  // 3D Parallax Tilt on Mouse Move
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (!svgRef.current) return;
-      const pupils = svgRef.current.querySelectorAll('.avatar-pupil');
-      if (pupils.length === 0) return;
-
-      const rect = svgRef.current.getBoundingClientRect();
+      if (!avatarRef.current) return;
+      const rect = avatarRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      const deltaX = e.clientX - centerX;
-      const deltaY = e.clientY - centerY;
-      const angle = Math.atan2(deltaY, deltaX);
-      const distance = Math.min(Math.hypot(deltaX, deltaY) / 50, 4);
+      const deltaX = (e.clientX - centerX) / 25;
+      const deltaY = (e.clientY - centerY) / 25;
 
-      const moveX = Math.cos(angle) * distance;
-      const moveY = Math.sin(angle) * distance;
-
-      pupils.forEach(pupil => {
-        pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      setTilt({
+        x: Math.max(-10, Math.min(10, -deltaY)),
+        y: Math.max(-10, Math.min(10, deltaX))
       });
     };
 
@@ -30,90 +59,100 @@ export default function NoorAvatar({ avatar = 'noor3d', expression = 'happy', si
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const getMouthPath = () => {
-    if (expression === 'happy') return "M 38 65 Q 50 78 62 65";
-    if (expression === 'thinking') return "M 42 66 Q 50 62 58 66";
-    if (expression === 'sad') return "M 40 70 Q 50 60 60 70";
-    return "M 40 65 Q 50 72 60 65";
-  };
+  const handleTap = (e) => {
+    playAudioTone('success');
+    // Sparkle effect
+    const newSparkle = { id: Date.now(), x: Math.random() * 60 - 30, y: Math.random() * 60 - 30 };
+    setSparkles(prev => [...prev.slice(-3), newSparkle]);
 
-  const getEyebrowTransform = () => {
-    if (expression === 'happy') return "rotate(-5 32 36)";
-    if (expression === 'thinking') return "rotate(10 32 36)";
-    if (expression === 'sad') return "rotate(15 32 36)";
-    return "none";
+    speak("أهلاً بك يا بطل! أنا صديقتك نور، جاهزة لمساعدتك واللعب معك كلياً!");
+
+    if (onClick) onClick(e);
   };
 
   return (
     <div
-      className={`noor-avatar-wrapper ${className}`}
-      style={{ width: `${size}px`, height: `${size}px`, display: 'inline-block', position: 'relative' }}
+      ref={avatarRef}
+      className={`noor-official-avatar ${className}`}
+      onClick={handleTap}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        display: 'inline-block',
+        position: 'relative',
+        cursor: 'pointer',
+        perspective: '1000px',
+        userSelect: 'none'
+      }}
     >
-      <svg
-        ref={svgRef}
-        viewBox="0 0 100 100"
-        width="100%"
-        height="100%"
-        style={{ filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.15))', overflow: 'visible' }}
-      >
-        <defs>
-          <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFE0BD" />
-            <stop offset="100%" stopColor="#FAC698" />
-          </linearGradient>
-          <linearGradient id="hijabGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F59E0B" />
-            <stop offset="100%" stopColor="#D97706" />
-          </linearGradient>
-          <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F43F5E" />
-            <stop offset="100%" stopColor="#BE123C" />
-          </linearGradient>
-        </defs>
+      {/* Speaking Soundwave Glow Ring */}
+      {isSpeaking && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: '-10px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(245,158,11,0.4) 0%, rgba(255,255,255,0) 70%)',
+            animation: 'speakingPulse 1s infinite alternate ease-in-out',
+            zIndex: 1
+          }}
+        />
+      )}
 
-        {/* Hijab Back */}
-        <path d="M 12 45 C 8 85, 92 85, 88 45 C 88 15, 12 15, 12 45 Z" fill="url(#hijabGrad)" />
+      {/* Official 3D Character Image */}
+      <img
+        src={getNoorImage()}
+        alt="شخصية نور الرسمية"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'drop-shadow(0 12px 20px rgba(30, 58, 138, 0.2))',
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: 'transform 0.15s ease-out',
+          animation: isSpeaking ? 'noorTalkingBounce 0.4s infinite alternate ease-in-out' : 'noorFloat 3s infinite ease-in-out',
+          position: 'relative',
+          zIndex: 2
+        }}
+      />
 
-        {/* Face */}
-        <ellipse cx="50" cy="52" rx="27" ry="29" fill="url(#skinGrad)" />
+      {/* Tap Sparkles */}
+      {sparkles.map(s => (
+        <span
+          key={s.id}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: `translate(${s.x}px, ${s.y}px)`,
+            fontSize: '1.8rem',
+            animation: 'sparkleFade 0.8s ease-out forwards',
+            zIndex: 10,
+            pointerEvents: 'none'
+          }}
+        >
+          ✨
+        </span>
+      ))}
 
-        {/* Hijab Inner Frame */}
-        <path d="M 23 50 C 23 25, 77 25, 77 50 C 77 56, 70 79, 50 79 C 30 79, 23 56, 23 50 Z" fill="none" stroke="url(#hijabGrad)" strokeWidth="6" />
-
-        {/* Eyes White */}
-        <ellipse cx="36" cy="48" rx="7" ry="9" fill="#FFF" />
-        <ellipse cx="64" cy="48" rx="7" ry="9" fill="#FFF" />
-
-        {/* Pupils */}
-        <g className="avatar-pupil" style={{ transition: 'transform 0.1s ease-out' }}>
-          <circle cx="36" cy="49" r="4.5" fill="#1E293B" />
-          <circle cx="64" cy="49" r="4.5" fill="#1E293B" />
-          <circle cx="34.5" cy="47" r="1.5" fill="#FFF" />
-          <circle cx="62.5" cy="47" r="1.5" fill="#FFF" />
-        </g>
-
-        {/* Eyebrows */}
-        <path d="M 29 37 Q 36 33 42 37" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" transform={getEyebrowTransform()} />
-        <path d="M 58 37 Q 64 33 71 37" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" transform={expression === 'thinking' ? "rotate(-10 68 36)" : "none"} />
-
-        {/* Cheeks */}
-        <circle cx="28" cy="57" r="4.5" fill="#F43F5E" opacity="0.35" />
-        <circle cx="72" cy="57" r="4.5" fill="#F43F5E" opacity="0.35" />
-
-        {/* Nose & Mouth */}
-        <path d="M 50 53 Q 48 57 50 58" fill="none" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
-        <path d={getMouthPath()} fill="none" stroke="#BE123C" strokeWidth="3.5" strokeLinecap="round" />
-
-        {/* Flower Accessory */}
-        <g transform="translate(22, 24)">
-          <circle cx="0" cy="0" r="5" fill="url(#roseGrad)" />
-          <circle cx="-4" cy="-4" r="3.5" fill="#FB7185" opacity="0.9" />
-          <circle cx="4" cy="-4" r="3.5" fill="#FB7185" opacity="0.9" />
-          <circle cx="-4" cy="4" r="3.5" fill="#FB7185" opacity="0.9" />
-          <circle cx="4" cy="4" r="3.5" fill="#FB7185" opacity="0.9" />
-          <circle cx="0" cy="0" r="2.5" fill="#FBBF24" />
-        </g>
-      </svg>
+      <style>{`
+        @keyframes noorFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes noorTalkingBounce {
+          0% { transform: translateY(0px) scale(1); }
+          100% { transform: translateY(-6px) scale(1.04); }
+        }
+        @keyframes speakingPulse {
+          0% { transform: scale(0.95); opacity: 0.5; }
+          100% { transform: scale(1.15); opacity: 0.9; }
+        }
+        @keyframes sparkleFade {
+          0% { opacity: 1; transform: translate(0, 0) scale(0.5); }
+          100% { opacity: 0; transform: translate(${Math.random() * 40 - 20}px, -40px) scale(1.3); }
+        }
+      `}</style>
     </div>
   );
 }
