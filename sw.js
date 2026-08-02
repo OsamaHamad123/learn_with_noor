@@ -1,7 +1,9 @@
-const CACHE_NAME = 'noor-game-cache-v3';
+const CACHE_NAME = 'noor-game-cache-v4';
 const urlsToCache = [
   './index.html',
   './manifest.json',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
   './assets/noor-idle.png',
   './assets/noor-happy.png',
   './assets/noor-thinking.png',
