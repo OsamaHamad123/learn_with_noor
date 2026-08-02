@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noor-game-cache-v1';
+const CACHE_NAME = 'noor-game-cache-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json',
