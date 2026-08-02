@@ -1147,6 +1147,71 @@
             pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
         });
     });
+    // --- Haptic Feedback ---
+    function haptic(type) {
+        if (!navigator.vibrate) return;
+        try {
+            if (type === 'tap') navigator.vibrate(10);
+            else if (type === 'success') navigator.vibrate([50, 50, 50]);
+            else if (type === 'error') navigator.vibrate([200]);
+        } catch(e) {}
+    }
+    document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('.planet-card') || e.target.closest('.world-card') || e.target.closest('.level-node') || e.target.closest('.avatar-option')) {
+            haptic('tap');
+        }
+    });
+
+    // --- Magic Trail Effect ---
+    const mtCanvas = document.getElementById('magic-trail');
+    const mtCtx = mtCanvas ? mtCanvas.getContext('2d') : null;
+    let trailParticles = [];
+    function resizeTrail() { if(mtCanvas){mtCanvas.width = window.innerWidth; mtCanvas.height = window.innerHeight;} }
+    window.addEventListener('resize', resizeTrail);
+    resizeTrail();
+    function addTrail(x, y) {
+        trailParticles.push({ x: x, y: y, life: 1, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, size: Math.random()*3 + 1 });
+    }
+    document.addEventListener('mousemove', e => addTrail(e.clientX, e.clientY));
+    document.addEventListener('touchmove', e => addTrail(e.touches[0] ? e.touches[0].clientX : 0, e.touches[0] ? e.touches[0].clientY : 0), {passive: true});
+    function animateTrail() {
+        if(!mtCtx) return;
+        mtCtx.clearRect(0,0, mtCanvas.width, mtCanvas.height);
+        for(let i=0; i<trailParticles.length; i++) {
+            let p = trailParticles[i];
+            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            if(p.life <= 0) { trailParticles.splice(i,1); i--; continue; }
+            mtCtx.beginPath();
+            mtCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            mtCtx.fillStyle = `rgba(255, 215, 0, ${p.life})`;
+            mtCtx.fill();
+        }
+        requestAnimationFrame(animateTrail);
+    }
+    animateTrail();
+
+    // --- 3D Parallax Map ---
+    let targetTiltX = 0, targetTiltY = 0;
+    let currentTiltX = 0, currentTiltY = 0;
+    window.addEventListener('deviceorientation', (e) => {
+        if (!e.gamma || !e.beta) return;
+        let gamma = e.gamma; let beta = e.beta;
+        if (gamma > 45) gamma = 45; if (gamma < -45) gamma = -45;
+        if (beta > 90) beta = 90; if (beta < 0) beta = 0;
+        targetTiltX = gamma / 45; targetTiltY = (beta - 45) / 45;
+    });
+    function animateParallax() {
+        currentTiltX += (targetTiltX - currentTiltX) * 0.1;
+        currentTiltY += (targetTiltY - currentTiltY) * 0.1;
+        const wrapper = document.querySelector('.screens-wrapper');
+        if (wrapper) wrapper.style.backgroundPosition = `calc(50% + ${currentTiltX * 20}px) calc(50% + ${currentTiltY * 20}px)`;
+        document.querySelectorAll('.planet-card, .world-card').forEach(el => {
+            el.style.transform = `translate(${-currentTiltX * 10}px, ${-currentTiltY * 10}px)`;
+        });
+        requestAnimationFrame(animateParallax);
+    }
+    animateParallax();
+
     // Register Service Worker for PWA Offline mode
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
