@@ -6,6 +6,13 @@ export function setSubtitleCallback(cb) {
   currentSubtitleCallback = cb;
 }
 
+// Pre-load voices on browser startup
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
+}
+
 // Advanced Phonetic Diacritics Mapper for Ultra-Clear Arabic TTS
 function applyDiacritics(text) {
   if (!text) return "";
@@ -45,24 +52,25 @@ export function speakText(text, audioEnabled = true, onStart = null, onEnd = nul
     currentSubtitleCallback(spokenText);
   }
 
-  // 1. Web Speech API with Edge Neural AI Voices Priority (Zariyah / Salma)
+  // Pure Web Speech API with Edge Neural AI Voices Priority
   if (typeof window !== 'undefined' && window.speechSynthesis) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = 'ar-SA';
     utterance.rate = 0.95;
-    utterance.pitch = 1.45; // High cute child pitch
+    utterance.pitch = 1.5; // High cute child female pitch
 
     const voices = window.speechSynthesis.getVoices();
 
     // Priority Neural Voices: Zariyah, Salma, Laila, Natural, Female
-    const neuralVoice = voices.find(v =>
+    const femaleVoice = voices.find(v =>
       v.lang.startsWith('ar') &&
-      (v.name.includes('Zariyah') || v.name.includes('Salma') || v.name.includes('Laila') || v.name.includes('Natural') || v.name.includes('Online')) &&
-      !v.name.includes('Naayf')
-    ) || voices.find(v => v.lang.startsWith('ar') && !v.name.includes('Naayf') && !v.name.includes('Male'));
+      !v.name.includes('Naayf') &&
+      !v.name.includes('Male') &&
+      (v.name.includes('Zariyah') || v.name.includes('Salma') || v.name.includes('Laila') || v.name.includes('Female') || v.name.includes('Natural') || v.name.includes('Google'))
+    ) || voices.find(v => v.lang.startsWith('ar') && !v.name.includes('Naayf'));
 
-    if (neuralVoice) utterance.voice = neuralVoice;
+    if (femaleVoice) utterance.voice = femaleVoice;
 
     utterance.onstart = () => {
       if (onStart) onStart();
@@ -74,7 +82,8 @@ export function speakText(text, audioEnabled = true, onStart = null, onEnd = nul
     };
 
     utterance.onerror = () => {
-      fallbackGoogleAudio(spokenText, onStart, onEnd);
+      if (onEnd) onEnd();
+      if (currentSubtitleCallback) currentSubtitleCallback(null);
     };
 
     currentUtterance = utterance;
@@ -82,36 +91,19 @@ export function speakText(text, audioEnabled = true, onStart = null, onEnd = nul
     return;
   }
 
-  fallbackGoogleAudio(spokenText, onStart, onEnd);
-}
-
-// Fallback HTML5 Audio Stream for Ultra-Clear Arabic Pronunciation
-function fallbackGoogleAudio(spokenText, onStart, onEnd) {
-  try {
-    const encodedText = encodeURIComponent(spokenText);
-    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=ar&client=tw-ob`;
-    const audio = new Audio(audioUrl);
-    audio.playbackRate = 0.95;
-
+  // ResponsiveVoice Fallback (if installed)
+  if (typeof window !== 'undefined' && window.responsiveVoice) {
     if (onStart) onStart();
-
-    audio.onended = () => {
-      if (onEnd) onEnd();
-      if (currentSubtitleCallback) currentSubtitleCallback(null);
-    };
-
-    audio.onerror = () => {
-      if (onEnd) onEnd();
-      if (currentSubtitleCallback) currentSubtitleCallback(null);
-    };
-
-    audio.play().catch(() => {
-      if (onEnd) onEnd();
-      if (currentSubtitleCallback) currentSubtitleCallback(null);
+    window.responsiveVoice.speak(spokenText, "Arabic Female", {
+      rate: 0.9,
+      pitch: 1.3,
+      onend: () => {
+        if (onEnd) onEnd();
+        if (currentSubtitleCallback) currentSubtitleCallback(null);
+      }
     });
-  } catch (e) {
+  } else {
     if (onEnd) onEnd();
-    if (currentSubtitleCallback) currentSubtitleCallback(null);
   }
 }
 
